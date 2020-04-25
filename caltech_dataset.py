@@ -2,6 +2,8 @@ from torchvision.datasets import VisionDataset
 
 from PIL import Image
 
+import pandas as pd
+
 import os
 import os.path
 import sys
@@ -20,6 +22,13 @@ class Caltech(VisionDataset):
 
         self.split = split # This defines the split you are going to use
                            # (split files are called 'train.txt' and 'test.txt')
+
+        self.caltechDS = pd.read_csv('train.txt', header=None)
+        self.caltechDS['img_paths'] = self.caltechDS[0]
+        self.caltechDS = self.caltechDS.drop(0, axis=1)
+        
+        self.caltechDS['images'] = self.caltechDS.apply(lambda r: pil_loader(r['img_paths']), axis=1)
+        self.caltechDS['class'] = self.caltechDS.apply(lambda r: r['img_paths'].split('/')[0], axis=1)
 
         '''
         - Here you should implement the logic for reading the splits files and accessing elements
@@ -40,9 +49,8 @@ class Caltech(VisionDataset):
             tuple: (sample, target) where target is class_index of the target class.
         '''
 
-        image, label = ... # Provide a way to access image and label via index
-                           # Image should be a PIL Image
-                           # label can be int
+        image = self.caltechDS.loc[index, 'images']
+        label = self.caltechDS.loc[index, 'class']
 
         # Applies preprocessing when accessing the image
         if self.transform is not None:
@@ -55,5 +63,5 @@ class Caltech(VisionDataset):
         The __len__ method returns the length of the dataset
         It is mandatory, as this is used by several other components
         '''
-        length = ... # Provide a way to get the length (number of elements) of the dataset
+        length = len(self.caltechDS.index)
         return length
