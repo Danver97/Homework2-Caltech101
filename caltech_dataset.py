@@ -23,7 +23,7 @@ class Caltech(VisionDataset):
         self.split = split # This defines the split you are going to use
                            # (split files are called 'train.txt' and 'test.txt')
 
-        self.caltechDS = pd.read_csv('train.txt', header=None)
+        self.caltechDS = pd.read_csv(split + '.txt', header=None)
         self.caltechDS['img_paths'] = self.caltechDS[0]
         self.caltechDS = self.caltechDS.drop(0, axis=1)
         
