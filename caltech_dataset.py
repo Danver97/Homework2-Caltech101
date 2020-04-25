@@ -27,8 +27,12 @@ class Caltech(VisionDataset):
         self.caltechDS['img_paths'] = self.caltechDS[0]
         self.caltechDS = self.caltechDS.drop(0, axis=1)
         
-        self.caltechDS['images'] = self.caltechDS.apply(lambda r: pil_loader(r['img_paths']), axis=1)
+        self.caltechDS['images'] = self.caltechDS.apply(lambda r: pil_loader(root +'/'+ r['img_paths']), axis=1)
         self.caltechDS['class'] = self.caltechDS.apply(lambda r: r['img_paths'].split('/')[0], axis=1)
+        self.caltechDS['class'] = self.caltechDS['class'].astype('category')
+        self.caltechDS['labels'] = self.caltechDS['class'].cat.codes
+
+        self.categoryMapping = dict(enumerate(self.caltechDS['class'].cat.categories))
 
         '''
         - Here you should implement the logic for reading the splits files and accessing elements
@@ -38,6 +42,9 @@ class Caltech(VisionDataset):
           through the index
         - Labels should start from 0, so for Caltech you will have lables 0...100 (excluding the background class) 
         '''
+    
+    def getClass(self, label):
+        return self.categoryMapping[label]
 
     def __getitem__(self, index):
         '''
@@ -50,7 +57,7 @@ class Caltech(VisionDataset):
         '''
 
         image = self.caltechDS.loc[index, 'images']
-        label = self.caltechDS.loc[index, 'class']
+        label = self.caltechDS.loc[index, 'labels']
 
         # Applies preprocessing when accessing the image
         if self.transform is not None:
