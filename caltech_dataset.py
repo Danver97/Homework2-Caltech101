@@ -7,6 +7,7 @@ import pandas as pd
 import os
 import os.path
 import sys
+import random
 
 
 def pil_loader(path):
@@ -23,14 +24,18 @@ class Caltech(VisionDataset):
         self.split = split # This defines the split you are going to use
                            # (split files are called 'train.txt' and 'test.txt')
 
-        self.caltechDS = pd.read_csv(split + '.txt', header=None)
+        self.caltechDS = pd.read_csv(split+'.txt', header=None)
         self.caltechDS['img_paths'] = self.caltechDS[0]
         self.caltechDS = self.caltechDS.drop(0, axis=1)
         
         self.caltechDS['images'] = self.caltechDS.apply(lambda r: pil_loader(root +'/'+ r['img_paths']), axis=1)
         self.caltechDS['class'] = self.caltechDS.apply(lambda r: r['img_paths'].split('/')[0], axis=1)
+        self.caltechDS = self.caltechDS.loc[self.caltechDS['class'] != 'BACKGROUND_Google'] # Eliminates the 'BACKGROUND' class
+        self.caltechDS = self.caltechDS.reset_index(drop=True)
+
         self.caltechDS['class'] = self.caltechDS['class'].astype('category')
         self.caltechDS['labels'] = self.caltechDS['class'].cat.codes
+        self.caltechDS['labels'] = self.caltechDS['labels'].astype('int64')
 
         self.categoryMapping = dict(enumerate(self.caltechDS['class'].cat.categories))
 
@@ -43,6 +48,19 @@ class Caltech(VisionDataset):
         - Labels should start from 0, so for Caltech you will have lables 0...100 (excluding the background class) 
         '''
     
+    def splitInTrainValidation(self, ratio=0.5, seed=None):
+      train_indexes = []
+      val_indexes = []
+      print('seed:', seed)
+      for v in self.categoryMapping.values():
+        indexes_to_sample = list(self.caltechDS.loc[self.caltechDS['class'] == v].index)
+        random.seed(seed)
+        train_samples = random.sample(indexes_to_sample, int(len(indexes_to_sample)*ratio))
+        train_indexes = train_indexes + train_samples
+        val_indexes = val_indexes + list(set(indexes_to_sample).difference(set(train_samples)))
+      return train_indexes, val_indexes
+
+      
     def getClass(self, label):
         return self.categoryMapping[label]
 
