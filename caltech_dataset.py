@@ -64,6 +64,9 @@ class Caltech(VisionDataset):
     def getClass(self, label):
         return self.categoryMapping[label]
 
+    def getClassWeights(self):
+        return self.caltechDS['labels'].value_counts().sort_index().to_numpy()
+
     def __getitem__(self, index):
         '''
         __getitem__ should access an element through its index
